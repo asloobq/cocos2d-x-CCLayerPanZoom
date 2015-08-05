@@ -25,32 +25,12 @@
 * THE SOFTWARE.
 *
 */
+#ifndef __CCLAYERPANZOOM_H__
+#define __CCLAYERPANZOOM_H__
 
 #include "cocos2d.h"
-USING_NS_CC;
 
 #define kCCLayerPanZoomMultitouchGesturesDetectionDelay 0.5
-
-#ifndef INFINITY
-#ifdef _MSC_VER
-union MSVC_EVIL_FLOAT_HACK
-{
-    unsigned __int8 Bytes[4];
-    float Value;
-};
-static union MSVC_EVIL_FLOAT_HACK INFINITY_HACK = {{0x00, 0x00, 0x80, 0x7F}};
-#define INFINITY (INFINITY_HACK.Value)
-#endif
-
-#ifdef __GNUC__
-#define INFINITY (__builtin_inf())
-#endif
-
-#ifndef INFINITY
-#define INFINITY (1e1000)
-#endif
-#endif
-
 
 typedef enum
 {
@@ -75,7 +55,7 @@ typedef enum
 } CCLayerPanZoomFrameEdge;
 
 
-class CCLayerPanZoom : public cocos2d::CCLayer
+class CCLayerPanZoom : public cocos2d::Layer
 {
 public:
     // Here's a difference. Method 'init' in cocos2d-x returns bool, instead of returning 'id' in cocos2d-iphone
@@ -96,7 +76,7 @@ public:
 
     //ToDo add delegate
     CC_SYNTHESIZE(float, _maxTouchDistanceToClick, maxTouchDistanceToClick);
-    CC_SYNTHESIZE(CCArray*, _touches, touches);
+    //CC_SYNTHESIZE(std::vector<cocos2d::Touch*>, _touches, touches);
     CC_SYNTHESIZE(float, _touchDistance, touchDistance);
     CC_SYNTHESIZE(float, _minSpeed, minSpeed);
     CC_SYNTHESIZE(float, _maxSpeed, maxSpeed);
@@ -105,16 +85,17 @@ public:
     CC_SYNTHESIZE(float, _leftFrameMargin, leftFrameMargin);
     CC_SYNTHESIZE(float, _rightFrameMargin, rightFrameMargin);
 
-    CC_SYNTHESIZE(CCScheduler*, _scheduler, scheduler);
+    CC_SYNTHESIZE(cocos2d::Scheduler*, _scheduler, scheduler);
     CC_SYNTHESIZE(float, _rubberEffectRecoveryTime, rubberEffectRecoveryTime);
 
-    CCRect _panBoundsRect;
+	cocos2d::Rect _panBoundsRect;
+	cocos2d::Vector<cocos2d::Touch*> _touches;
     float _maxScale;
     float _minScale;
 
     CCLayerPanZoomMode _mode;
 
-    CCPoint _prevSingleTouchPositionInLayer; 
+    cocos2d::Vec2 _prevSingleTouchPositionInLayer;
     //< previous position in layer if single touch was moved.
 
     // Time when single touch has began, used to wait for possible multitouch 
@@ -129,19 +110,20 @@ public:
     bool _rubberEffectZooming;
 
     //CCStandartTouchDelegate
-    void ccTouchesBegan(cocos2d::CCSet *pTouches, cocos2d::CCEvent *pEvent);
-    void ccTouchesMoved(cocos2d::CCSet *pTouches, cocos2d::CCEvent *pEvent);
-    void ccTouchesEnded(cocos2d::CCSet *pTouches, cocos2d::CCEvent *pEvent);
-    void ccTouchesCancelled(cocos2d::CCSet *pTouches, cocos2d::CCEvent *pEvent);
-
+    virtual void onTouchesBegan(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event *pEvent);
+    virtual void onTouchesMoved(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event *pEvent);
+    virtual void onTouchesEnded(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event *pEvent);
+    virtual void onTouchesCancelled(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event *pEvent);
+	
     // Updates position in frame mode.
     virtual void update(float dt);
     void onEnter();
     void onExit();
 
     //Scale and Position related
-    void setPanBoundsRect(CCRect rect);
-    void setPosition(CCPoint  position);
+	void setPanBoundsRect(const cocos2d::Rect& rect);
+	void setPosition(const cocos2d::Vec2& position);
+	void setPosition( float x, float y);
     void setScale(float scale);
 
     //Ruber Edges related
@@ -149,12 +131,13 @@ public:
     void recoverEnded();
 
     //Helpers
-    float topEdgeDistance();
-    float leftEdgeDistance();
-    float bottomEdgeDistance();    
-    float rightEdgeDistance();
+    float getTopEdgeDistance();
+    float getLeftEdgeDistance();
+    float getBottomEdgeDistance();
+    float getRightEdgeDistance();
     float minPossibleScale();
-    CCLayerPanZoomFrameEdge frameEdgeWithPoint( cocos2d::CCPoint point);
-    float horSpeedWithPosition(CCPoint pos);
-    float vertSpeedWithPosition(CCPoint pos);
+    CCLayerPanZoomFrameEdge frameEdgeWithPoint( const cocos2d::Vec2& point);
+    float horSpeedWithPosition(const cocos2d::Vec2& pos);
+    float vertSpeedWithPosition(const cocos2d::Vec2& pos);
 };
+#endif
